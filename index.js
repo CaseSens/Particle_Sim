@@ -6,6 +6,8 @@ let interval;
 let particles = [];
 let workers = [];
 
+let spitting = false;
+
 document.addEventListener('keypress', (event) => {
   switch (event.key) {
     case " ":
@@ -15,13 +17,20 @@ document.addEventListener('keypress', (event) => {
         start();
       };
       break;
+      
     case "f":
       if (playing) {
-        createParticle();
+        if (spitting) {
+          spitting = false;
+        } else {
+          spitting = true;
+        }
       }
   }
-
 });
+
+const addParticleBtn = document.getElementById('addParticle');
+addParticleBtn.addEventListener('click', createParticle);
 
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -54,19 +63,18 @@ function getReasonableMousePos(px, py) {
   const expX = a * Math.pow(b, diffX);
   const expY = a * Math.pow(b, diffY);
 
-  console.log(`accel: ${expX}:${expY}`);
-
   return new Vector2(expX, expY);
 }
 
 function createParticle() {
 	let second = new Date().getSeconds();
-	console.log(`particle created at ${second}`);
   const oldPos = new Vector2(canvasWidth/2, 20);
   const position = new Vector2(canvasWidth/2, 20);
-  const accel = getReasonableMousePos(position.x, position.y);
-  const particle = new Particle(position, oldPos, getRandomInt(4,16), accel, getRandomColor());
-  console.log(particle.mass);
+  // const accel = getReasonableMousePos(position.x, position.y);
+  const accel = new Vector2(70, 70);
+  // const radius = getRandomInt(4, 16);
+  const radius = 8;
+  const particle = new Particle(position, oldPos, radius, accel, getRandomColor());
   particles.push(particle);
   particleCountText.innerHTML = `Particle count: ${particles.length}`
 }
@@ -98,13 +106,6 @@ function start() {
 
 		accumulatedTime += dt;
 
-		if (particles.length < 700) {
-			if (accumulatedTime >= particleCreationIntervalInSeconds) {
-				createParticle();
-				accumulatedTime -= particleCreationIntervalInSeconds;
-			}
-		}
-
     worker.postMessage({
       particles: particles,
       dt: dt,
@@ -120,9 +121,19 @@ function stop() {
   }
 }
 
+let spitTimer = 0;
 let worker = new Worker("particleWorker.js");
 worker.onmessage = function (event) {
   particles = event.data;
+
+  if (spitting) {
+    spitTimer++;
+
+    if (spitTimer % 10 === 0) {
+      createParticle();
+      spitTimer = 0;
+    }
+  }
 
 	if (!Array.isArray(particles)) {
 		console.log('not an array');
