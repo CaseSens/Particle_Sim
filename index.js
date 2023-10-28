@@ -16,7 +16,9 @@ document.addEventListener('keypress', (event) => {
       };
       break;
     case "f":
-      createParticle();
+      if (playing) {
+        createParticle();
+      }
   }
 
 });
@@ -25,14 +27,48 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function getRandomColor() {
+  const r = getRandomInt(0, 255);
+  const g = getRandomInt(0, 255);
+  const b = getRandomInt(0, 255);
+
+  return `rgb(${r},${g},${b})`;
+}
+
+let canvasWidth = canvas.width;
+let canvasHeight = canvas.height;
+let mouseX = canvasWidth;
+let mouseY = canvasHeight;
+
+canvas.addEventListener('mousemove', (event) => {
+  mouseX = event.pageX;
+  mouseY = event.pageY;
+});
+
+function getReasonableMousePos(px, py) {
+  const a = 1; // Base value
+  const b = 1.015; // Growth rate
+  const diffX = Math.abs(px - mouseX);
+  const diffY = Math.abs(py - mouseY);
+
+  const expX = a * Math.pow(b, diffX);
+  const expY = a * Math.pow(b, diffY);
+
+  console.log(`accel: ${expX}:${expY}`);
+
+  return new Vector2(expX, expY);
+}
+
 function createParticle() {
 	let second = new Date().getSeconds();
 	console.log(`particle created at ${second}`);
-  const position = new Vector2(20, 20);
-  const velocity = new Vector2(400, 400);
-  const particle = new Particle(position, getRandomInt(4,16), velocity, "white");
+  const oldPos = new Vector2(canvasWidth/2, 20);
+  const position = new Vector2(canvasWidth/2, 20);
+  const accel = getReasonableMousePos(position.x, position.y);
+  const particle = new Particle(position, oldPos, getRandomInt(4,16), accel, getRandomColor());
   console.log(particle.mass);
   particles.push(particle);
+  particleCountText.innerHTML = `Particle count: ${particles.length}`
 }
 
 let playing = false;
@@ -45,7 +81,7 @@ btnStartSim.addEventListener("click", () => {
 
 let intervalChange = 0;
 let accumulatedTime = 0;
-let particleCreationIntervalInSeconds = 0.5;
+let particleCreationIntervalInSeconds = 0.2;
 
 function start() {
   playing = true;
@@ -62,7 +98,7 @@ function start() {
 
 		accumulatedTime += dt;
 
-		if (particles.length < 3) {
+		if (particles.length < 700) {
 			if (accumulatedTime >= particleCreationIntervalInSeconds) {
 				createParticle();
 				accumulatedTime -= particleCreationIntervalInSeconds;
@@ -92,7 +128,6 @@ worker.onmessage = function (event) {
 		console.log('not an array');
 	} else {
 		renderParticles(particles);
-
 	}
 
 };
@@ -103,8 +138,8 @@ function renderParticles(particles) {
   particles.forEach((particle) => {
     ctx.beginPath();
     ctx.arc(
-      particle.position.x,
-      particle.position.y,
+      particle.position_current.x,
+      particle.position_current.y,
       particle.radius,
       0,
       Math.PI * 2
@@ -114,3 +149,5 @@ function renderParticles(particles) {
     ctx.closePath();
   });
 }
+
+const particleCountText = document.getElementById('particleCount');
