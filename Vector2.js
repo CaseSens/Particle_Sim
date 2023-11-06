@@ -2,6 +2,10 @@ class Vector2 {
     constructor(x, y) {
       this.x = x;
       this.y = y;
+
+      if (isNaN(this.x) || isNaN(this.y)) {
+        console.error('NaN detected in Vector2', this);
+      }
     }
   
     static one() {

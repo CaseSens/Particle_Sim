@@ -1,5 +1,6 @@
 class Particle {
-    constructor(position_current, position_old, radius, acceleration, color) {
+    constructor(id, position_current, position_old, radius, acceleration, color) {
+      this.id = id;
       this.position_current = position_current;
       this.position_old = position_old
       this.radius = radius;
@@ -11,6 +12,7 @@ class Particle {
     updatePosition(dt) {
       const velocity = this.position_current.subtract(this.position_old);
       const accelerationTerm = this.acceleration.multiply(dt * dt);
+
   
       this.position_old = this.position_current;
       this.position_current = this.position_current.add(velocity).add(accelerationTerm);
