@@ -74,7 +74,7 @@ function createParticle() {
   const accel = new Vector2(70, 70);
   // const radius = getRandomInt(4, 16);
   const radius = 8;
-  const particle = new Particle(position, oldPos, radius, accel, getRandomColor());
+  const particle = new Particle(position, oldPos, radius, accel, "blue");
   particles.push(particle);
   particleCountText.innerHTML = `Particle count: ${particles.length}`
 }
@@ -91,27 +91,39 @@ let intervalChange = 0;
 let accumulatedTime = 0;
 let particleCreationIntervalInSeconds = 0.2;
 
+function animate() {
+  let now = Date.now();
+  dt = (now - lastTime) / 1000;
+  lastTime = now;
+
+  accumulatedTime += dt;
+
+  worker.postMessage({
+    particles: particles,
+    dt: dt,
+    canvasDimen: { width: canvas.width, height: canvas.height }
+  });
+
+  frameCount++;
+
+  let currentFPSUpdateTime = Date.now();
+  if (currentFPSUpdateTime - fpsLastTime >= 1000) { // check every second
+      fpsDisplay.textContent = `FPS: ${frameCount}`;
+      frameCount = 0; // reset frame count
+      fpsLastTime = currentFPSUpdateTime; // update last time FPS was updated
+  }
+
+  requestAnimationFrame(animate); // Loop
+}
+
 function start() {
   playing = true;
-  // If on first load, make the first particle without waiting
   if (intervalChange === 0) {
-    createParticle();
+      createParticle();
   }
   intervalChange++;
-	lastTime = Date.now();
-  interval = setInterval(() => {
-    let now = Date.now();
-    dt = (now - lastTime) / 1000;
-    lastTime = now;
-
-		accumulatedTime += dt;
-
-    worker.postMessage({
-      particles: particles,
-      dt: dt,
-			canvasDimen: { width: canvas.width, height: canvas.height }
-    });
-  }, 5);
+  lastTime = Date.now();
+  animate(); // Start the animation loop
 }
 
 function stop() {
@@ -162,3 +174,15 @@ function renderParticles(particles) {
 }
 
 const particleCountText = document.getElementById('particleCount');
+
+let frameCount = 0;
+let fpsLastTime = 0;
+let fpsDisplay = document.createElement('div');
+fpsDisplay.style.position = 'fixed';
+fpsDisplay.style.top = '10px';
+fpsDisplay.style.left = '10px';
+fpsDisplay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+fpsDisplay.style.color = 'white';
+fpsDisplay.style.padding = '5px 10px';
+fpsDisplay.style.zIndex = '1000';
+document.body.appendChild(fpsDisplay);
