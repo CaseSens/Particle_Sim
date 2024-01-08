@@ -24,6 +24,10 @@ self.onmessage = function (event) {
       )
   );
 
+  if (particles.length == 0) {
+    console.log('hello')
+  }
+
   canvasWidth = event.data.canvasDimen.width;
   canvasHeight = event.data.canvasDimen.height;
 

@@ -7,8 +7,8 @@ let particles = [];
 let particlePositionsInGrid = [];
 const workers = [];
 
-const GRID_WIDTH = 400;
-const GRID_HEIGHT = 200;
+const GRID_WIDTH = 80;
+const GRID_HEIGHT = 80;
 
 let spitting = false;
 
